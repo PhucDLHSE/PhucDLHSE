@@ -77,12 +77,11 @@ https://github.com/PhucDLHSE/MobileShop.git
 
 #### Cài đặt các thư viện
 ```bash 
-Cài đặt phần Backend
+Cài đặt thư viện Backend
 cd BE
 npm install
 
-Cài đặt phần Fontend
-cd fe
+Cài đặt thư viện dự án
 npm install
 ```
 
