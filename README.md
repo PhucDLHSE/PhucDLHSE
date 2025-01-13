@@ -19,6 +19,7 @@ Dự án này là hệ thống quản lý cho một trang thương mại điện
 - **Quản lý người dùng**:
   - Tạo, chỉnh sửa, xóa tài khoản.
   - Hiển thị danh sách tài khoản.
+  - Chặn/Mở chặn tài khoản người dùng.
 - **Quản lý đơn hàng**:
   - Xem, cập nhật trạng thái đơn hàng.
   - Quản lý danh sách tất cả đơn hàng.  
@@ -63,14 +64,10 @@ Dự án này là hệ thống quản lý cho một trang thương mại điện
 - Postman Agent (https://www.postman.com/downloads)
 
 ### 2. Cài đặt dự án
-```bash 
-Cài đặt phần Backend
-cd BE
-npm install
-
-Cài đặt phần Fontend
-cd fe
-npm install
+```bash
+Cài đặt chung
+npm install -g nodemon
+npm install -g http-server
 ```
 
 #### Clone repository
