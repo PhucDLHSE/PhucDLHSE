@@ -142,3 +142,15 @@ exports.searchPublicProducts = async (req, res) => {
   }
 };
 
+exports.getPublicProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate('brand category');
+    if (!product) {
+      return res.status(404).json({ msg: 'Không tìm thấy sản phẩm!' });
+    }
+    res.json(product);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};

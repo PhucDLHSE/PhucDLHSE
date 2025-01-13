@@ -12,6 +12,7 @@ const cartRoutes = require('./routes/cart');
 const addressRoutes = require('./routes/address');
 const userRoutes = require('./routes/user');
 const orderRoutes = require('./routes/order');
+const paymentRoutes = require('./routes/payment');
 
 dotenv.config({ path: './BE/.env' });
 
@@ -34,6 +35,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/payment', paymentRoutes);
 
 app.use(express.static(path.join(__dirname, '../fe')));
 

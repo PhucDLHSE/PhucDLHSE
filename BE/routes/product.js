@@ -7,6 +7,8 @@ const adminAuth = require('../middleware/adminAuth');
 // Lấy tất cả sản phẩm
 router.get('/public', productController.getPublicProducts);
 
+router.get('/public/:id', productController.getPublicProductById);
+
 //Lấy sản phẩm theo Category
 router.get('/public/category/:categoryId', productController.getPublicProductsByCategory);
 

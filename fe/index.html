@@ -67,7 +67,9 @@
                 <a href="#" class="text-white mx-2"><i class="fas fa-phone-alt"></i> Gọi mua hàng 1800.2097</a>
                 <a href="#" class="text-white mx-2"><i class="fas fa-map-marker-alt"></i> Cửa hàng gần bạn</a>
                 <a href="#" class="text-white mx-2"><i class="fas fa-truck"></i> Tra cứu đơn hàng</a>
-                <a href="#" class="text-white mx-2"><i class="fas fa-shopping-cart"></i> Giỏ hàng</a>
+                <button class="btn text-white mx-2" onclick="showCartModal()">
+                    <i class="fas fa-shopping-cart"></i> Giỏ hàng (<span id="cartCount">0</span>)
+                </button>
                 <a href="login.html" class="text-white mx-2"><i class="fas fa-user"></i> Đăng nhập</a>
             </div>
         </div>
@@ -172,6 +174,30 @@
         <!-- Sản phẩm theo danh mục.... -->
     </div>
 
+    <!-- Modal Giỏ hàng -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cartModalLabel">Giỏ hàng của bạn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="cartItems"></div>
+                <div id="cartTotal" class="text-right mt-3">
+                    <strong>Tổng cộng: </strong><span>0đ</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="window.location.href='login.html'">
+                    Đăng nhập để thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <!-- Popper.js -->
@@ -185,9 +211,9 @@
     <script>
         var myCarousel = document.querySelector('#carouselExampleIndicators');
         var carousel = new bootstrap.Carousel(myCarousel, {
-            interval: 2000, // Thời gian chuyển slide (ms)
-            wrap: true,     // Quay lại slide đầu khi hết
-            pause: 'hover'  // Tạm dừng khi di chuột
+            interval: 2000, 
+            wrap: true,     
+            pause: 'hover'  
         });
     </script>
     
@@ -198,49 +224,86 @@
         document.addEventListener('DOMContentLoaded', function () {
             fetchProducts();
             fetchCategories();
+            updateCartDisplay(); 
         });
+
         function fetchProducts() {
-        fetch('http://localhost:5000/api/products/public', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(products => {
-        const productList = document.getElementById('product-list');
-        productList.innerHTML = '';
+            fetch('http://localhost:5000/api/products/public', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(products => {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = '';
 
-        const sortedProducts = products.sort((a, b) => {
-            return parseInt(b._id.substring(0, 8), 16) - parseInt(a._id.substring(0, 8), 16);
-        });
+            const sortedProducts = products.sort((a, b) => {
+                return parseInt(b._id.substring(0, 8), 16) - parseInt(a._id.substring(0, 8), 16);
+            });
 
-        const recentProducts = sortedProducts.slice(0, 12);
+            const recentProducts = sortedProducts.slice(0, 12);
 
-        recentProducts.forEach(product => {
-            const productCard = `
-            <div class="col-md-2 mb-4">
-                <div class="card h-100">
-                    <div class="position-relative">
-                        <img src="${product.images[0]}" class="card-img-top" alt="${product.name}" onclick="showLoginAlert()">
-                        <i class="fas fa-cart-plus position-absolute top-0 end-0 m-2" style="cursor:pointer;" onclick="addToCart('${product._id}')"></i>
+            recentProducts.forEach(product => {
+                const productCard = `
+                    <div class="col-md-2 mb-4">
+                        <div class="card h-100" data-product-id="${product._id}">
+                            <div class="position-relative">
+                                <img src="${product.images[0]}" class="card-img-top" alt="${product.name}" 
+                                    onclick="window.location.href='/product-details/${product._id}'">
+                                <i class="fas fa-cart-plus position-absolute top-0 end-0 m-2" style="cursor:pointer;" 
+                                    onclick="addToLocalCart('${product._id}')"></i>
+                            </div>
+                        <div class="card-body">
+                            <h5 class="card-title">${product.name}</h5>
+                            <p class="card-text product-price">${product.price}đ</p>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="decrementQuantity('${product._id}')">-</button>
+                                    <input type="number" class="form-control mx-2 text-center" id="quantity-${product._id}" value="1" min="1" style="width: 50px;">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="incrementQuantity('${product._id}')">+</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <h5 class="card-title">${product.name}</h5>
-                        <p class="card-text product-price">${product.price}đ</p>
-                    </div>
-                </div>
-            </div>`;
-            productList.insertAdjacentHTML('beforeend', productCard);
-        });
-    })
+                </div>`;
+                productList.insertAdjacentHTML('beforeend', productCard);
+            });
+        })
     .catch(error => console.error('Error fetching products:', error));
 }
 
     // Yêu cầu đăng nhập
-    function showLoginAlert() {
-        alert('Vui lòng đăng nhập để xem chi tiết sản phẩm.');
+    function addToLocalCart(event) {
+    // Ngăn chặn sự kiện click lan ra ngoài
+    event.stopPropagation();
+    
+    const cardElement = event.target.closest('.card');
+    const productId = cardElement.dataset.productId;
+    const quantity = parseInt(document.getElementById(`quantity-${productId}`).value);
+    const productName = cardElement.querySelector('.card-title').textContent;
+    const productPrice = cardElement.querySelector('.product-price').textContent;
+    const productImage = cardElement.querySelector('.card-img-top').src;
+
+    // Lấy giỏ hàng từ localStorage
+    let cart = JSON.parse(localStorage.getItem('localCart')) || [];
+    const existingProduct = cart.find(item => item.productId === productId);
+
+    if (existingProduct) {
+        existingProduct.quantity += quantity;
+    } else {
+        cart.push({
+            productId,
+            name: productName,
+            price: productPrice,
+            image: productImage,
+            quantity: quantity
+        });
     }
+
+    localStorage.setItem('localCart', JSON.stringify(cart));
+    updateCartDisplay();
+    alert('Đã thêm sản phẩm vào giỏ hàng!');
+}
         function fetchCategories() {
             fetch('http://localhost:5000/api/categories/public', {
                 method: 'GET',
@@ -273,30 +336,32 @@
                     .then(products => {
                         if (products.length > 0) {
                             const categorySection = `
-                            <div class="category-section">
-                                <h3>${category.name}</h3>
-                                <div class="row">
-                                    ${products.map(product => `
-                                        <div class="col-md-2 mb-4">
-                                            <div class="card h-100">
-                                                <div class="position-relative">
-                                                    <img src="${product.images[0]}" class="card-img-top" alt="${product.name}" onclick="showLoginAlert()>
-                                                    <i class="fas fa-cart-plus position-absolute top-0 end-0 m-2" style="cursor:pointer;" onclick="addToCart('${product._id}')"></i>
-                                                </div>
-                                                <div class="card-body">
-                                                    <h5 class="card-title">${product.name}</h5>
-                                                    <p class="card-text product-price">${product.price}đ</p>
-                                                    <div class="d-flex justify-content-center align-items-center">
-                                                        <button class="btn btn-outline-secondary btn-sm" onclick="decrementQuantity('${product._id}')">-</button>
-                                                        <input type="number" class="form-control mx-2 text-center" id="quantity-${product._id}" value="1" min="1" style="width: 50px;">
-                                                        <button class="btn btn-outline-secondary btn-sm" onclick="incrementQuantity('${product._id}')">+</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>`;
+<div class="category-section">
+    <h3>${category.name}</h3>
+    <div class="row">
+        ${products.map(product => `
+            <div class="col-md-2 mb-4">
+                <div class="card h-100">
+                    <div class="position-relative">
+                        <img src="${product.images[0]}" class="card-img-top" alt="${product.name}" 
+                             onclick="window.location.href='/product-details/${product._id}'">
+                        <i class="fas fa-cart-plus position-absolute top-0 end-0 m-2" style="cursor:pointer;" 
+                           onclick="showLoginAlert()"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">${product.name}</h5>
+                        <p class="card-text product-price">${product.price}đ</p>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="decrementQuantity('${product._id}')">-</button>
+                            <input type="number" class="form-control mx-2 text-center" id="quantity-${product._id}" value="1" min="1" style="width: 50px;">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="incrementQuantity('${product._id}')">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('')}
+    </div>
+</div>`;
                             categoryProducts.insertAdjacentHTML('beforeend', categorySection);
                         }
                     });
@@ -334,19 +399,17 @@
             }
         products.forEach(product => {
             const productItem = `
-            <li class="dropdown-item" onclick="showLoginAlert()">
+            <li class="dropdown-item" onclick="window.location.href='/product-details/${product._id}'">
                 <img src="${product.images[0]}" alt="${product.name}" style="width: 30px; height: 30px; margin-right: 10px;">
                 ${product.name} - ${product.price}đ
             </li>`;
             searchDropdown.insertAdjacentHTML('beforeend', productItem);
         });
-
         searchDropdown.style.display = 'block';
     })
     .catch(error => console.error('Error searching products:', error));
 }
 
-    // Ẩn tìm kiếm
     function hideSearchDropdown() {
     const searchDropdown = document.getElementById('search-dropdown');
     searchDropdown.style.display = 'none';
@@ -358,6 +421,84 @@
         hideSearchDropdown();
         }
     });
+    </script>
+
+    <script>
+        function showCartModal() {
+            const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+                updateCartDisplay();
+                modal.show();
+        }
+
+        function updateCartDisplay() {
+            const cart = JSON.parse(localStorage.getItem('localCart')) || [];
+            const cartItemsDiv = document.getElementById('cartItems');
+            const cartTotalSpan = document.getElementById('cartTotal').querySelector('span');
+            const cartCount = document.getElementById('cartCount');
+
+            cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p>Giỏ hàng trống</p>';
+                cartTotalSpan.textContent = '0đ';
+                return;
+            }
+
+            let total = 0;
+            cartItemsDiv.innerHTML = cart.map(item => {
+                const priceNumber = parseInt(item.price.replace(/[^\d]/g, ''));
+                const itemTotal = priceNumber * item.quantity;
+                total += itemTotal;
+
+                return `
+                <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                    <img src="${item.image}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover;" class="me-3">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0">${item.name}</h6>
+                        <div class="mt-1">
+                            <small>Giá: ${item.price}</small>
+                        </div>
+                        <div class="d-flex align-items-center mt-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="updateCartQuantity('${item.productId}', -1)">-</button>
+                            <span class="mx-2">${item.quantity}</span>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="updateCartQuantity('${item.productId}', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="text-end ms-3">
+                        <div class="mb-2">${(itemTotal).toLocaleString()}đ</div>
+                        <button class="btn btn-sm btn-danger" onclick="removeFromCart('${item.productId}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            cartTotalSpan.textContent = `${total.toLocaleString()}đ`;
+        }
+
+function updateQuantity(productId, change) {
+    let cart = JSON.parse(localStorage.getItem('localCart')) || [];
+    const index = cart.findIndex(item => item.productId === productId);
+    
+    if (index !== -1) {
+        const newQuantity = cart[index].quantity + change;
+        if (newQuantity > 0) {
+            cart[index].quantity = newQuantity;
+        } else {
+            cart.splice(index, 1);
+        }
+        localStorage.setItem('localCart', JSON.stringify(cart));
+        updateCartDisplay();
+    }
+}
+
+// Hàm xóa sản phẩm khỏi giỏ hàng
+function removeFromCart(productId) {
+    let cart = JSON.parse(localStorage.getItem('localCart')) || [];
+    cart = cart.filter(item => item.productId !== productId);
+    localStorage.setItem('localCart', JSON.stringify(cart));
+    updateCartDisplay();
+}
     </script>
 </body>
 </html>
